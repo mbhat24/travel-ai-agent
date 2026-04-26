@@ -1,7 +1,6 @@
 """
-Travel AI Agent Platform - Complete Rewrite with Security & Scaling
-Modern, professional design with travel counselling assistant
-Following teloscopy pattern: FastAPI + LLM + Sentiment Analysis + Security + Scaling
+Travel AI Agent Platform - Production Grade
+Professional travel platform with AI, security, and scalability
 """
 
 from fastapi import FastAPI, HTTPException, Request, Depends, WebSocket, WebSocketDisconnect
@@ -10,15 +9,31 @@ from fastapi.responses import JSONResponse, HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 import os
 import json
-import logging
 import time
 import uuid
+import re
+import html
 from pathlib import Path
-from dotenv import load_dotenv
 from typing import Optional, Dict, Any, List, Callable
 from datetime import datetime, timedelta
 import hashlib
 import hmac
+
+# Professional modules
+from config import settings
+from logger import get_logger, setup_logging, set_correlation_id, get_correlation_id
+from exceptions import (
+    TravelAIException, AuthenticationError, ValidationError,
+    RateLimitExceededError, ExternalAPIError
+)
+
+# Setup logging first
+setup_logging(
+    level=settings.logging.level,
+    structured=settings.logging.structured,
+    include_timestamp=settings.logging.include_timestamp
+)
+logger = get_logger(__name__)
 
 # Import auth module (simplified - in-memory)
 from auth_simple import (
@@ -30,28 +45,16 @@ from auth_simple import (
 # Import database
 from database import db
 
-load_dotenv()
-
-# Configuration
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-# Environment
-_TELOSCOPY_ENV = os.getenv("TELOSCOPY_ENV", "development")
-
-# LLM Configuration
-_LLM_BACKEND = os.getenv("TRAVEL_LLM_BACKEND", "openai")
-_LLM_MODEL = os.getenv("TRAVEL_LLM_MODEL", "gpt-4o-mini")
-_LLM_BASE_URL = os.getenv("TRAVEL_LLM_BASE_URL", "https://api.openai.com/v1")
-_LLM_API_KEY = os.getenv("TRAVEL_LLM_API_KEY") or os.getenv("OPENAI_API_KEY")
-
-# Security Configuration
-_CONSENT_SECRET = os.getenv("TRAVEL_CONSENT_SECRET", hashlib.sha256(os.urandom(32)).hexdigest())
-_CORS_ORIGINS = os.getenv("TRAVEL_CORS_ORIGINS", "*").split(",") if os.getenv("TRAVEL_CORS_ORIGINS") else ["*"]
-
-# Rate Limiting Configuration
-_RATE_LIMIT_REQUESTS = int(os.getenv("RATE_LIMIT_REQUESTS", "60"))
-_RATE_LIMIT_WINDOW = int(os.getenv("RATE_LIMIT_WINDOW", "60"))
+# Configuration shortcuts
+_TELOSCOPY_ENV = settings.env
+_LLM_BACKEND = settings.llm.backend
+_LLM_MODEL = settings.llm.model
+_LLM_BASE_URL = settings.llm.base_url
+_LLM_API_KEY = settings.llm.api_key
+_CONSENT_SECRET = settings.security.consent_secret
+_CORS_ORIGINS = settings.cors.allowed_origins
+_RATE_LIMIT_REQUESTS = settings.rate_limit.requests_per_minute
+_RATE_LIMIT_WINDOW = settings.rate_limit.window_seconds
 
 # ============================================================================
 # In-Memory Rate Limiter (Following teloscopy pattern - no external Redis)
