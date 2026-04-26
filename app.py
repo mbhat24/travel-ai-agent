@@ -6,7 +6,7 @@ Following teloscopy pattern: FastAPI + LLM + Sentiment Analysis + Security + Sca
 
 from fastapi import FastAPI, HTTPException, Request, Depends, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.responses import JSONResponse, HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 import os
 import json
@@ -26,6 +26,9 @@ from auth_simple import (
     verify_token, get_current_user, create_session, get_session, delete_session,
     delete_user_sessions, User, get_user_by_email, save_user
 )
+
+# Import database
+from database import db
 
 load_dotenv()
 
@@ -507,6 +510,10 @@ app.add_middleware(
     allow_headers=["Content-Type", "Authorization", "X-Requested-With", "X-Consent-Token"],
 )
 
+# Import and include API routes
+from api_routes import router as api_router
+app.include_router(api_router)
+
 # Security Headers Middleware
 @app.middleware("http")
 async def security_headers_middleware(request: Request, call_next):
@@ -875,24 +882,29 @@ async def travel_counsel(request: TravelCounsellorRequest):
     # Generate follow-up suggestions
     followups = generate_followups(sentiment, request.context)
     
-    if llm_response:
-        return CounsellorResponse(
-            response=llm_response,
-            sentiment=sentiment,
-            emergency=emergency,
-            followups=followups,
-            mode="ai",
-        )
+    # Determine final response
+    final_response = llm_response if llm_response else generate_fallback_response(message, sentiment)
+    mode = "ai" if llm_response else "template"
     
-    # Fallback response
-    fallback_response = generate_fallback_response(message, sentiment)
+    # Save conversation to database
+    try:
+        db.save_conversation(
+            message=message,
+            response=final_response,
+            user_id=None,  # Will be populated if user is authenticated
+            session_id=request.session_id,
+            sentiment=sentiment,
+            emergency_detected=emergency is not None
+        )
+    except Exception as e:
+        logger.error(f"Failed to save conversation: {e}")
     
     return CounsellorResponse(
-        response=fallback_response,
+        response=final_response,
         sentiment=sentiment,
         emergency=emergency,
         followups=followups,
-        mode="template",
+        mode=mode,
     )
 
 def generate_followups(sentiment: Dict[str, Any], context: Optional[Dict]) -> List[str]:
@@ -903,6 +915,23 @@ def generate_followups(sentiment: Dict[str, Any], context: Optional[Dict]) -> Li
         "What type of trip are you considering?",
         "How can I help you feel more prepared?",
     ]
+    
+    # Theme-based followups
+    for theme in sentiment.get("themes", []):
+        if theme == "safety":
+            followups.append("What specific safety concerns do you have?")
+        elif theme == "budget":
+            followups.append("What's your budget range?")
+        elif theme == "solo":
+            followups.append("What worries you most about solo travel?")
+        elif theme == "family":
+            followups.append("How many family members are traveling?")
+        elif theme == "food":
+            followups.append("Any dietary restrictions I should know about?")
+        elif theme == "adventure":
+            followups.append("What activity level are you looking for?")
+    
+    return followups[:5]
 
 # ============================================================================
 # Authentication Endpoints
@@ -1031,25 +1060,6 @@ async def refresh_token(request: Request):
     
     return {"access_token": access_token}
 
-# ============================================================================
-# Voice WebSocket Endpoint (Disabled - requires Python < 3.13)
-# ============================================================================
-# Voice feature disabled due to SpeechRecognition library incompatibility with Python 3.14
-# To enable voice, use Python 3.12 or earlier, or use a compatible speech library
-    
-    # Theme-based followups
-    for theme in sentiment.get("themes", []):
-        if theme == "safety":
-            followups.append("What specific safety concerns do you have?")
-        elif theme == "budget":
-            followups.append("What's your budget range?")
-        elif theme == "solo":
-            followups.append("What worries you most about solo travel?")
-        elif theme == "family":
-            followups.append("How many family members are traveling?")
-    
-    return followups[:5]
-
 def generate_fallback_response(message: str, sentiment: Dict[str, Any]) -> str:
     """Generate fallback response when LLM unavailable"""
     intensity = sentiment["intensity"]
@@ -1062,6 +1072,27 @@ def generate_fallback_response(message: str, sentiment: Dict[str, Any]) -> str:
         return "It sounds like you're feeling excited about your travel plans! That's wonderful. Tell me more about what you're looking forward to most, and I can help you make the most of it."
     else:
         return "I'd love to help you with your travel plans or concerns. Could you tell me a bit more about what you're looking for - planning a specific trip, dealing with travel anxiety, or something else?"
+
+# ============================================================================
+# Static Files & SPA Serving
+# ============================================================================
+# Create static directory if it doesn't exist
+static_dir = Path(__file__).parent / "static"
+static_dir.mkdir(exist_ok=True)
+
+# Mount static files
+try:
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+except Exception as e:
+    logger.warning(f"Could not mount static files: {e}")
+
+@app.get("/app")
+async def serve_app():
+    """Serve the main frontend application"""
+    index_path = Path(__file__).parent / "index.html"
+    if index_path.exists():
+        return FileResponse(str(index_path))
+    raise HTTPException(status_code=404, detail="Frontend not found")
 
 # ============================================================================
 # Main

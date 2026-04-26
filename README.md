@@ -1,87 +1,101 @@
-# Travel AI Agent Platform
+# 🌍 Travel AI Agent Platform
 
-An AI-powered travel agency platform with intelligent agents for trip planning, booking, and customer support.
+**Production-ready AI-powered travel platform with intelligent trip planning, booking assistance, and 24/7 customer support.**
 
-## Features
+> 📚 **For complete documentation, see [README_FINAL.md](README_FINAL.md)**
+> 📊 **For project summary, see [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md)**
 
-- **AI Trip Planning Agent**: Personalized itinerary generation using RAG
-- **Booking Agent**: Automated flight, hotel, and activity bookings
-- **Support Agent**: 24/7 customer service with natural language understanding
-- **Research Agent**: Destination insights and travel recommendations
-- **RAG System**: Knowledge base with vector embeddings for travel data
-- **MCP Integration**: Model Context Protocol for external API access
+---
 
-## Tech Stack
-
-### Backend
-- Python 3.11+
-- FastAPI
-- LangChain
-- OpenAI GPT-4
-- PostgreSQL
-- Redis
-- Pinecone (Vector DB)
-
-### Frontend
-- Next.js 14
-- TypeScript
-- TailwindCSS
-- shadcn/ui
-
-### Infrastructure
-- Docker
-- Render (Deployment)
-
-## Quick Start
+## ✨ Quick Start
 
 ### Prerequisites
 - Python 3.11+
-- Node.js 18+
-- PostgreSQL
-- Pinecone API key
-- OpenAI API key
+- pip
 
-### Installation
+### Installation & Run
 
 ```bash
-# Backend
-cd backend
+# Install dependencies
 pip install -r requirements.txt
-python -m uvicorn main:app --reload
 
-# Frontend
-cd frontend
-npm install
-npm run dev
+# Start the application
+python start.py
+# OR
+uvicorn app:app --reload --host 0.0.0.0 --port 8000
 ```
 
-## Environment Variables
+### Access the App
 
-```env
-# Backend
-OPENAI_API_KEY=your_openai_key
-PINECONE_API_KEY=your_pinecone_key
-PINECONE_ENVIRONMENT=your_pinecone_env
-DATABASE_URL=postgresql://user:pass@localhost/travel
-REDIS_URL=redis://localhost:6379
-AMADEUS_API_KEY=your_amadeus_key
-AMADEUS_SECRET=your_amadeus_secret
-BOOKING_API_KEY=your_booking_key
-WEATHER_API_KEY=your_weather_key
-VIATOR_API_KEY=your_viator_key
+- 🌐 **Web App**: http://localhost:8000/app
+- 📖 **API Docs**: http://localhost:8000/docs
+- ✅ **Health**: http://localhost:8000/health
 
-# Frontend
-NEXT_PUBLIC_API_URL=http://localhost:8000
+---
+
+## 🚀 What's Included
+
+### 🤖 AI Features
+- **Travel Planning**: AI-generated itineraries with LLM + fallback templates
+- **Travel Counsellor**: 24/7 conversational support with sentiment analysis
+- **Emergency Detection**: Automatic detection with resource provision
+
+### 🗄️ Data & Persistence
+- **SQLite Database**: Full persistence for users, trips, conversations
+- **Trip Management**: CRUD operations, status tracking, history
+- **User Profiles**: Personalized experience with statistics
+
+### 🌐 External Integrations
+- **Weather API**: Real-time weather & forecasts
+- **Travel Advisories**: Country-specific safety info
+- **Currency Converter**: Real-time exchange rates
+- **Amadeus**: Flight & hotel search (when configured)
+
+### 🔐 Security
+- JWT Authentication with refresh tokens
+- Rate limiting & CSRF protection
+- Security headers & consent management
+- bcrypt password hashing
+
+---
+
+## 📚 Documentation
+
+| Document | Description |
+|----------|-------------|
+| [README_FINAL.md](README_FINAL.md) | Complete documentation & API reference |
+| [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md) | Summary of all enhancements |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | System architecture details |
+| [DEPLOYMENT.md](DEPLOYMENT.md) | Deployment guides |
+
+---
+
+## 🐳 Docker Deployment
+
+```bash
+docker build -t travel-ai-agent .
+docker run -p 8000:8000 -e TRAVEL_LLM_API_KEY=your_key travel-ai-agent
 ```
 
-## API Documentation
+## ☸️ Kubernetes Deployment
 
-Once running, visit `http://localhost:8000/docs` for interactive API documentation.
+```bash
+kubectl apply -f k8s-simple/
+```
 
-## Deployment
+---
 
-This project is configured for deployment on Render. See `render.yaml` for configuration.
+## 📊 Stats
 
-## License
+- **30+ API Endpoints**
+- **5 Database Tables**
+- **4 External API Integrations**
+- **Production-Ready Security**
 
-MIT
+---
+
+## 📝 License
+
+MIT License - See LICENSE file
+
+Built with ❤️ by Mahesh Bhat

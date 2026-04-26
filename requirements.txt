@@ -1,5 +1,5 @@
-# Travel AI Agent - Simplified Dependencies (Following Teloscopy Pattern)
-# Single service, no external databases, in-memory storage only
+# Travel AI Agent - Production Dependencies
+# Complete travel platform with AI, database, and API integrations
 
 # Core dependencies
 fastapi==0.104.1
@@ -12,4 +12,22 @@ python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.6
 
-# LLM integration uses standard library (urllib) for OpenAI-compatible APIs
+# Database
+sqlite3
+
+# HTTP client for API integrations
+urllib3>=2.0.0
+
+# Optional: Voice support (Python < 3.13)
+# SpeechRecognition==3.10.0
+# gTTS==2.4.0
+# pyaudio==0.2.13
+
+# Development and testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+httpx==0.25.2
+
+# Linting and formatting
+black==23.11.0
+flake8==6.1.0
