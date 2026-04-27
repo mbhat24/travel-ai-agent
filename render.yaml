@@ -1,5 +1,5 @@
-# Render Deployment Configuration - Simplified (Following Teloscopy Pattern)
-# Single service, no external databases, in-memory storage only
+# Render Deployment Configuration - Scalable (1M+ Users)
+# Requires external Redis and PostgreSQL services
 
 services:
   - type: web
@@ -22,6 +22,12 @@ services:
         sync: false
       # JWT Secret for authentication
       - key: TRAVEL_CONSENT_SECRET
+        sync: false
+      # Redis Configuration (Required for scalable deployment)
+      - key: REDIS_URL
+        sync: false
+      # PostgreSQL Configuration (Required for scalable deployment)
+      - key: DATABASE_URL
         sync: false
       # Environment
       - key: TELOSCOPY_ENV

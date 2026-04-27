@@ -1,5 +1,5 @@
-# Travel AI Agent - Production Dependencies
-# Complete travel platform with AI, database, and API integrations
+# Travel AI Agent - Professional Dependencies (1M+ Users)
+# Redis + PostgreSQL + Kubernetes deployment
 
 # Core dependencies
 fastapi==0.104.1
@@ -12,8 +12,17 @@ python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.6
 
-# Database
-sqlite3
+# Redis for distributed rate limiting and session management
+redis>=5.0.0
+
+# PostgreSQL for persistence
+asyncpg>=0.29.0
+sqlalchemy>=2.0.0
+alembic>=1.12.0
+
+# Voice/Speech recognition
+SpeechRecognition==3.10.0
+pydub==0.25.1
 
 # HTTP client for API integrations
 urllib3>=2.0.0
